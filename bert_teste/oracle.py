@@ -30,6 +30,7 @@ class Oracle:
         self.attribute_names = attribute_names
         self.label_names = label_names
         self.dataset["annotated"] = [False] * len(self.dataset)
+        self.annotated = 0
 
     @staticmethod
     def from_csv(path: str, attribute_names: list, label_names: list, **kwargs):
@@ -49,10 +50,18 @@ class Oracle:
         :return: dataset.
         """
         return self.dataset
+
+    def get_annotated_size(self):
+        """
+        Get the number of annotated entries.
+        :return: number of annotated entries.
+        """
+        return self.annotated
     
     def annotate(self, idx_list: list):
         """
         Annotate a list of entries.
+        ALWAYS USE THIS FUNCTION TO ANNOTATE ENTRIES, EVEN IF INSIDE A WRAPPER FUNCTION (see random_pick()).
         :param idx_list: list of indices to be annotated.
         :return: (list of entries' attributes, list of labels). These will be two numpy arrays, so that they can be directly used on any fit() function
         """
@@ -64,6 +73,7 @@ class Oracle:
         attributes = entries[self.attribute_names].values
         labels = entries[self.label_names].values
         self.dataset.loc[idx_list, "annotated"] = True
+        self.annotated += len(idx_list)
 
         return attributes, labels
     

@@ -49,9 +49,8 @@ def main():
 
     #main active learning loop
 
-    n_iterations = ceil((MAX_POOL_SIZE - INITIAL_POOL_SIZE) / ANNOTATION_SIZE)
+    n_iterations = ceil((MAX_POOL_SIZE - INITIAL_POOL_SIZE) / ANNOTATION_SIZE) + 1
     for i in range(n_iterations):
-        print(f'Iteration {i}/{n_iterations}\nSize of training pool: {len(x)}')
         if i == n_iterations - 1:
             annotation_size = MAX_POOL_SIZE - len(x)
         else:
@@ -59,6 +58,8 @@ def main():
 
         #annotate the pool
         attributes, labels = oracle.random_pick(annotation_size)
+        print(f'Iteration {i}/{n_iterations}\nSize of training pool: {oracle.get_annotated_size()}')
+
         
         oracle.to_csv('./datasets/temp_train_dataset.csv')
         #train the model
