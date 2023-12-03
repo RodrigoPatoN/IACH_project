@@ -5,10 +5,8 @@ Implements the main loop of the active learning algorithm.
 #HYPERPARAMETERS
 STRATEGY = 'random' #active learning strategy to be used. options: random, ...
 INITIAL_POOL_SIZE = 1000 #initial pool size
-ANNOTATION_SIZE = 100 #number of entries to be annotated in each iteration
-MAX_POOL_SIZE = 1000 #maximum pool size. if not compatible with INITIAL_POOL_SIZE and ANNOTATION_SIZE, the last annotation will be shorter than ANNOTATION_SIZE
-
-EPOCHS = 1 #number of epochs to be used in each iteration
+ANNOTATION_SIZE = 500 #number of entries to be annotated in each iteration
+MAX_POOL_SIZE = 10000 #maximum pool size. if not compatible with INITIAL_POOL_SIZE and ANNOTATION_SIZE, the last annotation will be shorter than ANNOTATION_SIZE
 
 
 from copy import deepcopy
@@ -51,8 +49,11 @@ def main():
 
 
     #initialize datasets
-    train_dataset, test_dataset = sk.train_test_split(pd.read_csv("./datasets/Sentiment Analysis Dataset.csv", on_bad_lines="skip"), test_size=0.2)
-    test_dataset = test_dataset.sample(1000)
+    # train_dataset, test_dataset = sk.train_test_split(pd.read_csv("./datasets/Sentiment Analysis Dataset.csv", on_bad_lines="skip"), test_size=0.2)
+    # test_dataset = test_dataset.sample(1000)
+    # test_dataset.to_csv('./datasets/temp_test_dataset.csv', index=False)
+    train_dataset = pd.read_csv("./datasets/train_data.csv", on_bad_lines="skip")
+    test_dataset = pd.read_csv("./datasets/test_data.csv", on_bad_lines="skip")
     test_dataset.to_csv('./datasets/temp_test_dataset.csv', index=False)
     oracle = Oracle(train_dataset, ['SentimentText'], ['Sentiment'])
     print('dataset loaded to oracle')
@@ -66,12 +67,12 @@ def main():
     n_iterations = ceil((MAX_POOL_SIZE - INITIAL_POOL_SIZE) / ANNOTATION_SIZE) + 1
     rest = (MAX_POOL_SIZE - INITIAL_POOL_SIZE) % ANNOTATION_SIZE
     for i in range(n_iterations):
-        if i == n_iterations - 1:
-            annotation_size = rest
-        elif i == 0:
+        if i == 0:
             annotation_size = INITIAL_POOL_SIZE
             #initialize training pool
             print('initializing training pool')
+        elif i == n_iterations - 1:
+            annotation_size = rest
         else:
             annotation_size = ANNOTATION_SIZE
 
@@ -86,7 +87,7 @@ def main():
             return
         
         
-        print(f'Iteration {i}/{n_iterations}\nSize of training pool: {oracle.get_annotated_size()}')
+        print(f'Iteration {i+1}/{n_iterations}\nSize of training pool: {oracle.get_annotated_size()}')
 
         
         oracle.to_csv('./datasets/temp_train_dataset.csv')
@@ -94,7 +95,7 @@ def main():
         #apparently the training needs to be done in a whole different process. otherwise it will crash due to oom after some iterations. this way it clears the memory after each iteration
         print('retraining the model')
         nonce = int(time.time())
-        launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/bert_{nonce}.h5', str(EPOCHS), str(32)]))
+        launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/bert_{nonce}.h5']))
 
         #read the results from the temp file
         last_results = pd.read_csv('./results/temp_results.csv', comment='#')
