@@ -5,6 +5,8 @@ between runs, which reduces problems with memory leaks caused by tensorflow betw
 Saves the model using a nonce name provided
 Saves metrics to a temporary file. It will be overwritten on each run, so process it between runs.
 
+This model assumes some preprocessing has already took place, so specify the path to the tokenized dataset.
+
 Why does it write to a temp file instead of directly to a designated results file? Seems easier to manage all that logic
 inside the parent process, and it also allows for more flexibility, since the parent process can decide what to do with
 the results and where to put them.
@@ -17,7 +19,9 @@ import argparse
 import os
 import sys
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+import tensorflow as tf
 
+tf.config.set_visible_devices([], 'GPU') #disable gpu, as it causes memory leaks between runs and constant freezes
 
 
 def main(train_dataset_path, test_dataset_path, output_path):
@@ -38,7 +42,7 @@ def main(train_dataset_path, test_dataset_path, output_path):
         lstm.fit(train_dataset['SentimentText'], train_dataset['Sentiment'])
 
     #testing
-    with open(os.path.join("./results/", output_filename), 'w') as f:
+    with open(os.path.join("./temp/", output_filename), 'w') as f:
         f.write("#This is a temporary file. Will be overwritten on each training run.\n"
                 "#It contains all the metrics for the last run, so process it before running again.\n"
                 "#Read it with pandas.read_csv('temp_results.out', comment='#')\n")
@@ -74,11 +78,13 @@ def main(train_dataset_path, test_dataset_path, output_path):
         
         # lstm.evaluate(test_dataset['SentimentText'], test_dataset['Sentiment'])
         #not saving models due to space constraints
-        # lstm.save(output_path)
+        # print(lstm.predict(['hello world this is very good', 'omg that is horrible']))
+        lstm.save(output_path)
+        # tf.keras.backend.clear_session() #clears the session to avoid memory leaks
 
 
 def main_test():
-    main('./datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', './models/lstm_test.h5')
+    main('./temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', './temp/temp_model.keras')
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 """
 This is the main file for the active learning project.
 Implements the main loop of the active learning algorithm.
+DO NOT DEAL WITH TF MODELS HERE. LAUNCH A SUBPROCESS FOR EACH TASK.
+This is due to the device and memory management workarounds
 """
 # #HYPERPARAMETERS
 # MODEL = 'bert' #model to be used. options: bert, ...
@@ -20,6 +22,7 @@ import pandas as pd
 import subprocess
 import time
 import argparse
+import shutil
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -62,25 +65,32 @@ def main():
     os.mkdir(f'./models/{run_name}')
     placeholder_results = pd.read_csv('./results/expected_results.csv', comment='#')
     placeholder_results.to_csv(f'./results/{run_name}/results.csv', index=False)
+    #initialize temporary models as the initial model, unless resume is set to true
+    initial_model_name = f'initial_{MODEL}.keras'
+    temp_model_name = f'temp_{MODEL}.keras'
+    
+    if not RESUME:
+        initial_model_name = f'initial_{MODEL}.keras'
+        temp_model_name = f'temp_{MODEL}.keras'
+        shutil.copyfile(f'./models/{initial_model_name}', f'./temp/{temp_model_name}')
+
+
 
 
 
     #initialize datasets
-    # train_dataset, test_dataset = sk.train_test_split(pd.read_csv("./datasets/Sentiment Analysis Dataset.csv", on_bad_lines="skip"), test_size=0.2)
-    # test_dataset = test_dataset.sample(1000)
-    # test_dataset.to_csv('./datasets/temp_test_dataset.csv', index=False)
     
-    train_dataset = pd.read_csv("./datasets/train_data.csv", on_bad_lines="skip")
-    test_dataset = pd.read_csv("./datasets/test_data.csv", on_bad_lines="skip")
-    test_dataset.to_csv('./datasets/temp_test_dataset.csv', index=False)
+    train_dataset = pd.read_csv("./datasets/train_data.csv", on_bad_lines="skip", index_col=0)
+    test_dataset = pd.read_csv("./datasets/test_data.csv", on_bad_lines="skip", index_col=0)
+    test_dataset.to_csv('./temp/temp_test_dataset.csv')
     oracle = Oracle(train_dataset, ['SentimentText'], ['Sentiment'])
 
     if RESUME: #if resuming from last run, load the datasets from the temp files. this is useful if we want annotation sizes different between 0-1000 annotations and 1000-10000 annotations, for example. we can run the first part with 1000 annotations and then resume starting from the same 1000 annotations, but with a different annotation size 
         print('resuming from last run')
-        train_dataset_checkpoint = pd.read_csv("./datasets/temp_train_dataset.csv", on_bad_lines="skip")
+        train_dataset_checkpoint = pd.read_csv("./temp/temp_train_dataset.csv", on_bad_lines="skip", index_col=0)
         x, y = oracle.annotate_from_checkpoint(train_dataset_checkpoint)
-        if len(x) != INITIAL_POOL_SIZE:
-            print(f'ERROR: INITIAL_POOL_SIZE is set to {INITIAL_POOL_SIZE} but the checkpoint has {len(x)} entries.')
+        if oracle.get_annotated_size() != INITIAL_POOL_SIZE:
+            print(f'ERROR: INITIAL_POOL_SIZE is set to {INITIAL_POOL_SIZE} but the checkpoint has {oracle.get_annotated_size()} entries.')
             exit(1)
     print('dataset loaded to oracle')
 
@@ -104,39 +114,60 @@ def main():
             annotation_size = ANNOTATION_SIZE
 
         #annotate the pool
-        if STRATEGY == 'random':
-            attributes, labels = oracle.random_pick(annotation_size)
+        if annotation_size > 0:
+            print(f'selecting {annotation_size} entries for annotation')
+            if STRATEGY == 'random':
+                attributes, labels = oracle.random_pick(annotation_size)
 
-        elif STRATEGY == 'uncertainty':
-            train_data = oracle.get_non_annotated_data()
-            tf.keras.load_model(f'./models/{run_name}/model.h5')
-            attributes, labels = oracle.uncertainty_pick(annotation_size)
-        
-        #insert new strategies here
+            elif STRATEGY == 'uncertainty':
+                #save the non annotated data to a temp file
+                non_annotated_data = oracle.get_non_annotated_data()
+                if MODEL == 'bert':
+                    non_annotated_data = non_annotated_data.sample(10000) #bert can't handle the whole dataset at once, too slow
+                non_annotated_data.to_csv('./temp/temp_predict_data.csv')
 
-        else:
-            print(f'{STRATEGY} strategy is not implemented')
-            return
+                #predict the labels for the non annotated data
+                if MODEL == 'bert':
+                    launch_subprocess_and_wait(" ".join(['python', 'predict_bert.py', './temp/temp_model.keras', './temp/temp_predict_data.csv', './temp/temp_predictions.csv']))
+                elif MODEL == 'lstm':
+                    launch_subprocess_and_wait(" ".join(['python', 'predict_lstm.py', './temp/temp_model.keras', './temp/temp_predict_data.csv', './temp/temp_predictions.csv']))
+                else:
+                    print(f'{MODEL} model is not implemented. go to main.py line 130 to implement it')
+                    exit(1)
+
+                preds = pd.read_csv('./temp/temp_predictions.csv', comment='#', index_col=0)
+                #pick the #annotation_size entries with the highest uncertainty, basically the ones closer to 0.5
+                preds['prediction'] = np.abs(preds['prediction'].to_numpy() - 0.5) #convert to uncertainty
+                preds.sort_values(by='prediction', inplace=True)
+                idx_to_annotate = preds.index[:annotation_size]
+                attributes, labels = oracle.annotate(idx_to_annotate)
+                # print(attributes)
+
+            else:
+                print(f'{STRATEGY} strategy is not implemented')
+                return
         
         
         print(f'Iteration {i+1}/{n_iterations}\nSize of training pool: {oracle.get_annotated_size()}')
 
         
-        oracle.to_csv('./datasets/temp_train_dataset.csv')
+        
+        oracle.to_csv('./temp/temp_train_dataset.csv')
+        print(f'training pool checkpoint of size {oracle.get_annotated_size()} saved to temp_train_dataset.csv')
         #train the model
         #apparently the training needs to be done in a whole different process. otherwise it will crash due to oom after some iterations. this way it clears the memory after each iteration
         print('retraining the model')
         nonce = int(time.time())
         if MODEL == 'bert':
-            launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/bert_{nonce}.h5']))
+            launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', f'./temp/temp_model.keras']))
         elif MODEL == 'lstm':
-            launch_subprocess_and_wait(" ".join(['python', 'train_lstm.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/lstm_{nonce}.h5']))
+            launch_subprocess_and_wait(" ".join(['python', 'train_lstm.py', './temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', f'./temp/temp_model.keras']))
         else:
             print(f'{MODEL} model is not implemented')
             exit(1)
 
         #read the results from the temp file
-        last_results = pd.read_csv('./results/temp_results.csv', comment='#')
+        last_results = pd.read_csv('./temp/temp_results.csv', comment='#')
         last_results['run_name'] = [run_name for _ in range(len(last_results))] #actually should just be a one value list
         last_results['active_learning_strategy'] = [STRATEGY for _ in range(len(last_results))]
         dataset_size = oracle.get_annotated_size()

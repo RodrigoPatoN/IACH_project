@@ -1,1 +1,7 @@
-python main.py -r -m lstm -s random -i 100 -a 200 -f 300
+python main.py -m bert -s uncertainty -i 1000 -a 1000 -f 10000 -r
+python main.py -m lstm -s uncertainty -i 0 -a 100 -f 1000
+python main.py -m lstm -s uncertainty -i 1000 -a 1000 -f 10000 -r
+python main.py -m lstm -s random -i 0 -a 100 -f 1000
+python main.py -m lstm -s random -i 1000 -a 1000 -f 10000 -r
+python main.py -m bert -s random -i 0 -a 100 -f 1000
+python main.py -m bert -s random -i 1000 -a 1000 -f 10000 -r
