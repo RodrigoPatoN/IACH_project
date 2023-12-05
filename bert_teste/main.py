@@ -23,7 +23,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, default='bert', help='model to be used. options: bert, ...')
+    parser.add_argument('-m', '--model', type=str, default='lstm', help='model to be used. options: bert, ...')
     parser.add_argument('-s', '--strategy', type=str, default='random', help='active learning strategy to be used. options: random, ...')
     parser.add_argument('-i', '--initial_pool_size', type=int, default=0, help='initial pool size')
     parser.add_argument('-a', '--annotation_size', type=int, default=100, help='number of entries to be annotated in each iteration')
@@ -106,6 +106,11 @@ def main():
         #annotate the pool
         if STRATEGY == 'random':
             attributes, labels = oracle.random_pick(annotation_size)
+
+        elif STRATEGY == 'uncertainty':
+            train_data = oracle.get_non_annotated_data()
+            tf.keras.load_model(f'./models/{run_name}/model.h5')
+            attributes, labels = oracle.uncertainty_pick(annotation_size)
         
         #insert new strategies here
 
@@ -124,9 +129,11 @@ def main():
         nonce = int(time.time())
         if MODEL == 'bert':
             launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/bert_{nonce}.h5']))
+        elif MODEL == 'lstm':
+            launch_subprocess_and_wait(" ".join(['python', 'train_lstm.py', './datasets/temp_train_dataset.csv', './datasets/temp_test_dataset.csv', f'./models/lstm_{nonce}.h5']))
         else:
             print(f'{MODEL} model is not implemented')
-            return
+            exit(1)
 
         #read the results from the temp file
         last_results = pd.read_csv('./results/temp_results.csv', comment='#')

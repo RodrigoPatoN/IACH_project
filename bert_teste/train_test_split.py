@@ -7,7 +7,7 @@ MAX_TRAIN_SIZE = 10000
 data = pd.read_csv('./datasets/data_processed.csv')
 
 # Split the data into training and testing subsets
-train_data, test_data = train_test_split(data, train_size=MAX_TRAIN_SIZE, test_size=int(MAX_TRAIN_SIZE/0.7*0.3), random_state=42)
+train_data, test_data = train_test_split(data, train_size=100000, test_size=int(MAX_TRAIN_SIZE/0.7*0.3), random_state=42)
 
 # Save the training and testing subsets to separate files
 train_data.to_csv('./datasets/train_data.csv', index=False)

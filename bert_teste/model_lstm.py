@@ -27,9 +27,9 @@ class LSTMModel:
         Initializes the model.
         """
         # Hyperparameters of the model
-        self.EMBEDDING_DIM = 768
+        self.EMBEDDING_DIM = 32
         self.MAX_LENGTH = 300
-
+        self.BATCH_SIZE = 32
         self.start_token = 1
         self.stop_token = 0
         self.vocab_size = 30522
@@ -37,7 +37,7 @@ class LSTMModel:
         
         # LSTM layers
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Embedding(self.vocab_size, self.EMBEDDING_DIM, input_length=self.MAX_LENGTH, name='text'),#, mask_zero=True)
+            tf.keras.layers.Embedding(self.vocab_size, self.EMBEDDING_DIM, input_length=self.MAX_LENGTH),
             tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
             tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
             tf.keras.layers.Dense(1, activation='sigmoid', name="output")
@@ -45,6 +45,8 @@ class LSTMModel:
         
         self.initial_weights = self.model.get_weights()
 
+
+    
 
     def summary(self):
         """
@@ -85,7 +87,7 @@ class LSTMModel:
     #     """
     #     return self.encoder(self.preprocessor(text_sequences))['pooled_output'].numpy()
     
-    def predict(self, text_sequences: list, batch_size=16):
+    def predict(self, text_sequences: list, batch_size=1):
         """
         Predicts the label of a text sequence.
         :param text_sequences: list of texts to be encoded. MUST BE A LIST, EVEN IF IT'S JUST ONE TEXT_SEQUENCE.

@@ -67,6 +67,13 @@ class Oracle:
         """
         return self.annotated
     
+    def get_non_annotated_data(self):
+        """
+        Get the non annotated entries.
+        :return: non annotated entries.
+        """
+        return self.dataset[~self.dataset["annotated"]]
+    
     def annotate(self, idx_list: list):
         """
         Annotate a list of entries.
