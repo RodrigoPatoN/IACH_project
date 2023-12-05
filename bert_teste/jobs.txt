@@ -1,0 +1,1 @@
+python main.py -r -m lstm -s random -i 100 -a 200 -f 300
