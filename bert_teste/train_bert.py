@@ -22,7 +22,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 
 def main(train_dataset_path, test_dataset_path, output_path):
     import pandas as pd
-    from model import BERTModel
+    from bert_model import BERTModel
 
     output_filename = "temp_results.csv"
     print(f"Saving output to {output_filename}")
@@ -34,7 +34,8 @@ def main(train_dataset_path, test_dataset_path, output_path):
     train_dataset = pd.read_csv(train_dataset_path, on_bad_lines="skip")
     test_dataset = pd.read_csv(test_dataset_path, on_bad_lines="skip")
     bert.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    bert.fit(train_dataset['SentimentText'], train_dataset['Sentiment'])
+    if train_dataset.shape[0] > 0:
+        bert.fit(train_dataset['SentimentText'], train_dataset['Sentiment'])
 
     #testing
     with open(os.path.join("./results/", output_filename), 'w') as f:

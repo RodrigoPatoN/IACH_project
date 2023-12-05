@@ -38,11 +38,20 @@ class Oracle:
         Load a dataset from a csv file.
         :param path: path to the csv file.
         :param kwargs: arguments to be passed to pandas.read_csv.
-        :return: None.
+        :return: Oracle object.
         """
         dataset = pd.read_csv(path, **kwargs)
         dataset = dataset[attribute_names + label_names]
         return Oracle(dataset, attribute_names, label_names)
+    
+    def annotate_from_checkpoint(self, checkpoint: pd.DataFrame):
+        """
+        Annotate the dataset from a checkpoint.
+        :param checkpoint: checkpoint to be used.
+        :return: (list of entries' attributes, list of labels). These will be two numpy arrays, so that they can be directly used on any fit() function
+        """
+        idxs_to_annotate = checkpoint.index.to_list()
+        return self.annotate(idxs_to_annotate)
     
     def get_dataset(self):
         """

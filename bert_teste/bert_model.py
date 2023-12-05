@@ -14,7 +14,7 @@ import sklearn.model_selection as sk
 
 
 class BERTModel:
-    EPOCHS = 15
+    EPOCHS = 20
     BATCH_SIZE = 32 #for training
     """
     My version of the bert model , inside a class. Provides methods to deal with training, evaluation, and preprocessing.
@@ -99,6 +99,7 @@ class BERTModel:
         return self.model.predict(text_sequences, batch_size=batch_size)
 
         
+
 
 
 if __name__ == "__main__":
