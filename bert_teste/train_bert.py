@@ -33,12 +33,12 @@ def main(train_dataset_path, test_dataset_path, output_path):
     bert.summary()
     train_dataset = pd.read_csv(train_dataset_path, on_bad_lines="skip")
     test_dataset = pd.read_csv(test_dataset_path, on_bad_lines="skip")
-    # bert.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    bert.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     if train_dataset.shape[0] > 0:
         bert.fit(train_dataset['SentimentText'], train_dataset['Sentiment'])
 
     #testing
-    with open(os.path.join("./results/", output_filename), 'w') as f:
+    with open(os.path.join("./temp/", output_filename), 'w') as f:
         f.write("#This is a temporary file. Will be overwritten on each training run.\n"
                 "#It contains all the metrics for the last run, so process it before running again.\n"
                 "#Read it with pandas.read_csv('temp_results.out', comment='#')\n")

@@ -170,6 +170,7 @@ def main():
         last_results = pd.read_csv('./temp/temp_results.csv', comment='#')
         last_results['run_name'] = [run_name for _ in range(len(last_results))] #actually should just be a one value list
         last_results['active_learning_strategy'] = [STRATEGY for _ in range(len(last_results))]
+        last_results['model'] = [MODEL for _ in range(len(last_results))]
         dataset_size = oracle.get_annotated_size()
         last_results['dataset_size'] = [dataset_size for _ in range(len(last_results))]
         print("appending results to results.csv")

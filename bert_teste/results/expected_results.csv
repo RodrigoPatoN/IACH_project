@@ -1,1 +1,1 @@
-run_name,active_learning_strategy,dataset_size,accuracy,precision_avg,recall_avg,f1_avg,precision_negative,precision_positive,recall_negative,recall_positive,f1_negative,f1_positive
+run_name,model,active_learning_strategy,dataset_size,accuracy,precision_avg,recall_avg,f1_avg,precision_negative,precision_positive,recall_negative,recall_positive,f1_negative,f1_positive

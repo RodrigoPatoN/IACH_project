@@ -45,6 +45,7 @@ class LSTMModel:
             tf.keras.layers.Embedding(self.vocab_size, self.EMBEDDING_DIM, input_length=self.MAX_LENGTH, mask_zero=True),
             tf.keras.layers.LSTM(64, return_sequences=True),
             tf.keras.layers.LSTM(32),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(1, activation='sigmoid', name="output")
         ])
         
