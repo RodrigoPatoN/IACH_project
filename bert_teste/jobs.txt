@@ -1,1 +1,1 @@
-python main.py -r -m lstm -s random -i 100 -a 200 -f 300
+python main.py -m ensemble -s comitee -i 1000 -a 1000 -f 10000 -r

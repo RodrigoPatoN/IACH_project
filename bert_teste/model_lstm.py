@@ -4,6 +4,7 @@ HYPERPARAMETERS ARE DEFINED INSIDE EACH MODEL CLASS.
 """
 
 import os
+import pickle
 import sys
 import pandas as pd
 import tensorflow as tf
@@ -14,9 +15,8 @@ import numpy as np
 
 
 
-
 class LSTMModel:
-    EPOCHS = 1
+    EPOCHS = 10
     BATCH_SIZE = 32 #for training
     """
     My version of an LSTM model , inside a class. Provides methods to deal with training, evaluation, and preprocessing.
@@ -27,25 +27,40 @@ class LSTMModel:
         Initializes the model.
         """
         # Hyperparameters of the model
-        self.EMBEDDING_DIM = 32
+        self.EMBEDDING_DIM = 128
         self.MAX_LENGTH = 300
         self.BATCH_SIZE = 32
         self.start_token = 1
         self.stop_token = 0
-        self.vocab_size = 30522
+
+        # with open("./lstm_tokenizer.pickle", 'rb') as f:
+        #     pretrained_tokenizer = pickle.load(f)
+        # self.vocab_size = pretrained_tokenizer.num_words + 1 #+1 for the unknown token
+        # self.tokenizer = pretrained_tokenizer
         self.tokenizer = text.BertTokenizer("./bert-base-uncased-vocab.txt", lower_case=True)
-        
+        self.vocab_size = 35022 #bert vocab size
+
         # LSTM layers
-        self.model = tf.keras.Sequential([
-            tf.keras.layers.Embedding(self.vocab_size, self.EMBEDDING_DIM, input_length=self.MAX_LENGTH),
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
+        self.model = tf.keras.Sequential([ #bidirectional is too slow
+            tf.keras.layers.Embedding(self.vocab_size, self.EMBEDDING_DIM, input_length=self.MAX_LENGTH, mask_zero=True),
+            tf.keras.layers.LSTM(64, return_sequences=True),
+            tf.keras.layers.LSTM(32),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(1, activation='sigmoid', name="output")
         ])
         
         self.initial_weights = self.model.get_weights()
 
+    @staticmethod
+    def from_file(path): #this is a constructor
+        """
+        Loads a model from a file.
+        """
 
+        #instantiates the class
+        lstm = LSTMModel()
+        lstm.model = tf.keras.models.load_model(path, custom_objects={'KerasLayer': hub.KerasLayer})
+        return lstm
     
 
     def summary(self):
@@ -105,6 +120,7 @@ class LSTMModel:
         text_sequences = text_sequences.merge_dims(-2, -1).numpy()
         text_sequences = tf.keras.utils.pad_sequences(text_sequences, padding='post', maxlen=max_length - 1, value=self.stop_token)
         text_sequences = np.pad(text_sequences, ((0, 0), (1, 0)), constant_values=self.start_token)
+        #generate random 2d array of shape (len(text_sequences), max_length) with values between 0 and vocab_size
         return text_sequences
 
         
