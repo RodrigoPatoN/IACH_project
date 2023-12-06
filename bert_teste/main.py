@@ -66,13 +66,17 @@ def main():
     placeholder_results = pd.read_csv('./results/expected_results.csv', comment='#')
     placeholder_results.to_csv(f'./results/{run_name}/results.csv', index=False)
     #initialize temporary models as the initial model, unless resume is set to true
-    initial_model_name = f'initial_{MODEL}.keras'
-    temp_model_name = f'temp_{MODEL}.keras'
+
+    if MODEL == 'ensemble':
+        ms = ['lstm', 'bert', 'svm']
+    else:
+        ms = [MODEL]
     
     if not RESUME:
-        initial_model_name = f'initial_{MODEL}.keras'
-        temp_model_name = f'temp_{MODEL}.keras'
-        shutil.copyfile(f'./models/{initial_model_name}', f'./temp/{temp_model_name}')
+        for m in ms:
+            initial_model_name = f'initial_{m}.keras' #in ensemble, svm will be a pickle file, but i'll keep thefake .keras extension for less code changes
+            temp_model_name = f'temp_{m}.keras'
+            shutil.copyfile(f'./models/{initial_model_name}', f'./temp/{temp_model_name}')
 
 
 
