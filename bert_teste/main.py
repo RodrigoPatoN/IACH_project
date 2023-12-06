@@ -67,13 +67,13 @@ def main():
     placeholder_results.to_csv(f'./results/{run_name}/results.csv', index=False)
     #initialize temporary models as the initial model, unless resume is set to true
 
-    if MODEL == 'ensemble':
-        ms = ['lstm', 'bert', 'svm']
+    if STRATEGY == 'comitee':
+        all_models = ['svm', 'lstm', 'bert']
     else:
-        ms = [MODEL]
+        all_models = [MODEL]
     
     if not RESUME:
-        for m in ms:
+        for m in all_models:
             initial_model_name = f'initial_{m}.keras' #in ensemble, svm will be a pickle file, but i'll keep thefake .keras extension for less code changes
             temp_model_name = f'temp_{m}.keras'
             shutil.copyfile(f'./models/{initial_model_name}', f'./temp/{temp_model_name}')
@@ -147,6 +147,50 @@ def main():
                 attributes, labels = oracle.annotate(idx_to_annotate)
                 # print(attributes)
 
+            elif STRATEGY == 'comitee':
+                #go batch by batch, because there's no need to predict the whole dataset at once
+                #each batch should be 10 times the annotation size
+                non_annotated_data = oracle.get_non_annotated_data()
+
+                batch_size = 10 * annotation_size
+                num_batches = (len(non_annotated_data) + batch_size - 1) // batch_size
+                df_batches = [non_annotated_data[i * batch_size:(i + 1) * batch_size] for i in range(num_batches)]
+
+                idx_to_annotate = [] #will store here the indexes of the entries to be annotated
+                # loop through the batches, break if the number of entries to be annotated is reached
+                for i, batch in enumerate(df_batches):
+
+                    if len(idx_to_annotate) >= annotation_size:
+                        break
+
+                    #store the current batch in a temp file
+                    batch.to_csv('./temp/temp_predict_data.csv')
+
+                    #check predictions of each model and store in an array (batch_size, 3) "preds_matrix"
+                    preds_matrix = np.zeros((len(batch), 3))
+                    for i, m in enumerate(all_models):
+                        print(f'predicting with {m}')
+                        launch_subprocess_and_wait(" ".join(['python', f'predict_{m}.py', f'./temp/temp_{m}.keras', './temp/temp_predict_data.csv', './temp/temp_predictions.csv']))
+                        preds = pd.read_csv('./temp/temp_predictions.csv', comment='#', index_col=0)
+                        preds_matrix[:, i] = preds['prediction'].to_numpy().round()
+                    
+                    #check the indexes (in preds_matrix) of the entries that have disagreement
+                    #disagreement is defined as having at least 2 different predictions
+                    #store the indexes in idx_to_annotate
+                    for i in range(len(batch)):
+                        if len(set(preds_matrix[i])) > 1:
+                            idx_to_annotate.append(batch.index[i])
+                            if len(idx_to_annotate) >= annotation_size:
+                                break
+
+                #annotate the entries
+                attributes, labels = oracle.annotate(idx_to_annotate)
+                #if the number of entries to be annotated is not reached, pick the remaining ones randomly
+                if len(idx_to_annotate) < annotation_size:
+                    print(f'picking {annotation_size - len(idx_to_annotate)} random entries')
+                    attributes, labels = oracle.random_pick(annotation_size - len(idx_to_annotate))
+
+
             else:
                 print(f'{STRATEGY} strategy is not implemented')
                 return
@@ -164,17 +208,35 @@ def main():
         nonce = int(time.time())
         if MODEL == 'bert':
             launch_subprocess_and_wait(" ".join(['python', 'train_bert.py', './temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', f'./temp/temp_model.keras']))
+        
         elif MODEL == 'lstm':
             launch_subprocess_and_wait(" ".join(['python', 'train_lstm.py', './temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', f'./temp/temp_model.keras']))
+        
+        elif MODEL == 'ensemble':
+            #train each model individually
+            results_list = []
+            for m in all_models:
+                print(f'training {m}')
+                launch_subprocess_and_wait(" ".join(['python', f'train_{m}.py', './temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', f'./temp/temp_{m}.keras']))
+                #read the results from the temp file
+                last_results = pd.read_csv('./temp/temp_results.csv', comment='#')
+                last_results['model'] = [m for _ in range(len(last_results))]
+                results_list.append(last_results)
+            
+            #concatenate the results
+            results = pd.concat(results_list, axis=0, ignore_index=True)
+            results.to_csv('./temp/temp_results.csv', index=False)
+
         else:
             print(f'{MODEL} model is not implemented')
             exit(1)
 
         #read the results from the temp file
         last_results = pd.read_csv('./temp/temp_results.csv', comment='#')
-        last_results['run_name'] = [run_name for _ in range(len(last_results))] #actually should just be a one value list
+        last_results['run_name'] = [run_name for _ in range(len(last_results))]
         last_results['active_learning_strategy'] = [STRATEGY for _ in range(len(last_results))]
-        last_results['model'] = [MODEL for _ in range(len(last_results))]
+        if MODEL != 'ensemble':
+            last_results['model'] = [MODEL for _ in range(len(last_results))]
         dataset_size = oracle.get_annotated_size()
         last_results['dataset_size'] = [dataset_size for _ in range(len(last_results))]
         print("appending results to results.csv")

@@ -1,1 +1,1 @@
-python main.py -m ensemble -s ensemble -i 0 -a 100 -f 1000
+python main.py -m ensemble -s comitee -i 1000 -a 1000 -f 10000 -r
