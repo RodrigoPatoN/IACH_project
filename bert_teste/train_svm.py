@@ -42,7 +42,7 @@ def main(train_dataset_path, test_dataset_path, output_path):
         f.write("#This is a temporary file. Will be overwritten on each training run.\n"
                 "#It contains all the metrics for the last run, so process it before running again.\n"
                 "#Read it with pandas.read_csv('temp_results.out', comment='#')\n")
-        preds = svm.predict(test_dataset['SentimentText'], batch_size=256).flatten().round()
+        preds = svm.predict(test_dataset['SentimentText']).flatten()
         # print(preds.shape)
         # print(test_dataset['Sentiment'].to_numpy().shape)
         y_target = test_dataset['Sentiment'].to_numpy()
@@ -80,7 +80,7 @@ def main(train_dataset_path, test_dataset_path, output_path):
 
 
 def main_test():
-    main('./temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', './temp/temp_model.keras')
+    main('./temp/temp_train_dataset.csv', './temp/temp_test_dataset.csv', './temp/temp_svm.keras')
 
 
 if __name__ == "__main__":

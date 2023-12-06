@@ -24,7 +24,7 @@ class SVMModel:
         Initializes the model.
         """
         self.tokenizer = AutoTokenizer.from_pretrained('philschmid/BERT-tweet-eval-emotion')
-        self.model = SVC(C=self.C, kernel=self.KERNEL, gamma=self.GAMMA, verbose=2)#, n_jobs=-1)
+        self.model = SVC(C=self.C, kernel=self.KERNEL, gamma=self.GAMMA, verbose=2)
 
     @staticmethod
     def from_file(path): #this is a constructor
