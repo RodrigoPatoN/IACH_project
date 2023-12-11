@@ -1,0 +1,82 @@
+
+
+\subsection{LSTM}
+The second model used was an LSTM based deep neural network. We followed a similar workflow to that used for the SVM model. Although the training data is certainly different, the testing subset is exactly the same, in order to be able to compare the results of the two models. 
+\subsubsection{Feature Extraction}
+The feature extraction pipeline consisted of, essentially, tokenization, so that we convert the input string into a list of usable tokens, padding, so that all the input sequences have the same length, and finally, embedding, so that we can represent each token as a vector of numbers. For the tokenizer, we used the BertTokenizer from the tensorflow library. This tokenizer already includes a padding step, which we set to a max length of 300 tokens. We got to this number as a tweet has at most 280 characters, and some expressions in the original tweet, like emojis, were replaced by longer expressions, setting the maximum tweet size a bit above 300. Then, as BertTokenizer is a subword tokenizer, we will, almost always, get a tokenized expression that fits fully inside a 300-dimentional vector. However, in the rare case that the tokenizer returns a list of tokens that is longer than 300, we simply truncate the list to the first 300 tokens. Finally, we feed this tokenized and padded sequence to the embedding layer. The embedding layer was the first of this model, and was trained with the input data. Hyperparameters will be discussed further in the next section.
+\subsubsection{Model Architecture and Hyper-parameter Tuning}
+The model architecture chosen was simply the embedding layer, with an embedding dimention of 128, followed by two LSTM layers, with 64 and 32 cells, respectively, followed by a dense layer with a single unit, with a sigmoid activation function. After initial testing, it was decided that a dropout layer, with 0.2 dropout rate, was to be included before the dense layer, a common practice to prevent overfitting. Due to the model size and complexity, it was impossible to perform cross-validation to tune the hyperparameters, so a random search was performed instead. The hyperparameter search space consisted of:
+\begin{itemize}
+    \item Embedding dimention: 32, 64, 128, 256
+    \item Dropout rate: 0.1, 0.2, 0.3, 0.4
+    \item Batch size: 32, 64, 128, 256
+    \item Number of epochs: 10, 20, 30, 40
+\end{itemize}
+The model was trained using binary crossentropy as the loss function, as we have an output squashed between 0 and 1 by the sigmoid activation, and the Adam optimizer. It was decided to train it for 20 epochs, as this value was enough to reach convergence, and the training time was already quite long. The best model was chosen based on the validation loss, and the batch size used in the end was 32.
+
+\subsection{BERT}
+
+The third model used was a BERT based deep neural network. We followed a similar workflow to that used for the LSTM model. Again, despite the training data being different, the testing subset is exactly the same, for comparison purposes.
+\subsubsection{Feature Extraction}
+Here, we relied on a pre-trained BERT model to do the feature extraction. The model used was the original BERT base uncased model, which was trained on the English Wikipedia and the BookCorpus. This model assumes a maximum input sequence length of 512 tokens, which is viable by the same logic used for the LSTM model. The preprocessor was exactly the same as the one used during the initial BERT training, comprising the BertTokenizer (the same as previously used), which pads sequences to a lenght of 512 tokens, and the BERT model itself, which outputs a 768 by 512 matrix of embeddings for each sequence. As suggested in the original BERT paper, we used the [CLS] token (start token) embedding as the representation of the whole sequence, further compressing the 768 by 512 matrix to a 768-dimentional vector. This vector is our feature vector that will be fed to the classifier.
+\subsubsection{Model Architecture and Hyper-parameter Tuning}
+The model architecture chosen was simply the pre-trained BERT model followed by a dense layer with a single unit, with a sigmoid activation function. After initial testing, it was decided that a dropout layer, with 0.1 dropout rate, was to be included before the dense layer, to prevent overfitting. Due to the model size and complexity, it was, again, impossible to perform cross-validation to tune the hyperparameters, so a random search was performed instead. The hyperparameter search space consisted of:
+\begin{itemize}
+    \item Dropout rate - 0.1, 0.2, 0.3, 0.4
+    \item Batch size - 32, 64, 128, 256
+    \item Number of epochs - 10, 20, 30
+\end{itemize}
+The model was trained using binary crossentropy as the loss function, as the output is squashed between 0 and 1 by the sigmoid activation, and the Adam optimizer, the original BERT paper's optimizer of choice. However, during training, the BERT model was frozen, and only the dense layer was trained. After the search, it was decided to train it for 20 epochs, as this value was enough to reach convergence with a reasonable training time. The rest of the hyperparameters were chosen based on the validation loss and training time, and the values chosen were a batch size of 32 and a dropout rate of 0.1.
+
+\section{Uncertainty Sampling}
+\subsection{LSTM and BERT}
+When picking the entries for annotation using Uncertainty Sampling, we chose to use the least confident samples, meaning the samples for wich the model predicted values nearest the threshold of decision (0.5 for both models). To perform this, on every active learning iteration, we predicted the values of the not yet annotated samples of the training dataset, and then sorted them by the absolute difference between the predicted value and the decision threshold, picking the first n samples, where n is the number of samples to be annotated on that iteration. The only difference of methodologies in both models was a constraint we had to introduce in BERT due to it's computational complexity: whereas in the LSTM model we could predict the values of all the samples at once, for BERT we randomly subseted the training dataset to 10000 samples, and then predicted the values of those samples. This greatly increased prediction time without significantly affecting the results, as the prediction pool was still at least 10 times bigger than the largest annotation size used, and was randomly resampled every iteration, preventing depletion of uncertain samples. After each annotation event, the models were completely retrained (instead of using an incremental learning apporach, so that all the trtaining attributed the same importance, from the beginning, to each training sample) and evaluated on the test set. The results of this process will be discussed in the next section.
+
+\section{Materials}
+
+\subsection{Dataset}
+
+The dataset that will be used in this project is the Twitter Sentiment Analysis Dataset, which can be downloaded from \href{ http://thinknook.com/wp-content/uploads/2012/09/Sentiment-Analysis-Dataset.zip}{ http://thinknook.com/wp-content/uploads/2012/09/ Sentiment-Analysis-Dataset.zip}. 
+
+This dataset contains 1600000 sentences published to the social media platform "Twitter" - "Tweets", along with their classification. This classification identifies the sentiment of the sentence as negative (0) or positive (1). 
+
+Due to Twitters rules, Tweets are restricted to a maximum of 140 characters in length, which means that every sentence in our dataset has between 1 and 140 characters. Besides that, due to this restriction, people tend to use acronyms,
+emoticons and other characters to express themselves.
+
+Other particularity of texts collected from twitter is the usage of the "@" symbol, following by an account name, in order to tag another user.
+
+After getting the data, all the analysis will be performed using different python packages such as plotly (for the exploratory data analysis and all other data visualisations throughout the project), scikit-learn (for the implementation of some Machine Learning models and computation of the performance metrics), TensorFlow (for the implementation of some Machine Learning Models) and other NLP-related packages (for the NLP tasks).
+
+After our first experiments, we immediately noticed that two things: first, the dataset was too large for our resources, especially the most computationaly intensive models, and second, the dataset labels were not always the most accurate, due to the presence of neutral sentences labeled as either positive or negative.
+
+To solve the first problem, we decided to use a subset of the original dataset, containing 100000 samples. As we will detail further, the whole dataset won't ever be used for training, but instead further subsets with the size corresponding to the current pool size in each active learning iteration. As these are sampled from the 100k subset, we will need a common ground for evaluation, so we decided to extract a test dataset of 4300 samples (as we will discuss, we used a maximum training pool size of 10k most of the times, so we had a 70/30 training/testing split in the worst case scenario) from the original 1.6M dataset, without samples in common with the 100k training subset.
+
+To address the second problem, we decided to assess the impact of incorrectly labeled entries in the maximal therorectical accuracy possible. To do this, we counted the relative frequency of neutral samples labeled as positive or negative on a small (100 samples) subset. Assuming that the models, when presented a neutral sentence, would predict correctly the label half of the times, we derived the following formula for the maximal accuracy possible:
+\begin{equation}
+    \text{Max Accuracy} = \frac{\text{Correctly Labeled} + \frac{\text{Incorrectly Labeled}}{2}}{\text{Total Samples}}
+\end{equation}
+Therefore, we obtained the results in the following table:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|r}
+\cline{1-3}
+\textbf{Total} & \textbf{Correct} & \textbf{Incorrect} & \textbf{Max Acc.} \\ \cline{1-3}
+100            & 62               & 38                 & 0.81              \\ \cline{1-3}
+\end{tabular}
+\caption{Maximal Accuracy Possible}
+\label{tab:my-table}
+\end{table}
+
+So we will consider 81% as a perfect score.
+
+
+
+\subsection{Evaluation}
+
+Regarding the results evaluation, we will compare the models based on the accuracy. We initially considered using the F1 score and  recall, but we noticed that, for the present use case, both classes are equally important, and the dataset is well balanced, so "relevant class" based metrics are not necessary. Furthermore, accuracy is already the balanced average of the recall for each class, another reason to discard it.
+
+We plotted this metric in order to get a better understanding of how they evolve when the size of the dataset changes (the learning curve). We will then compare the 3 curves (random selection, query by committee and uncertainty sampling) for each of the models.
+
+As we have discussed in the Dataset section, we will use a test set of 4300 samples common to every evaluation event, so that we can compare the results of each model in a fair way.
+
