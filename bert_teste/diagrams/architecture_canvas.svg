@@ -25,15 +25,20 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="0.73851712"
-     inkscape:cx="563.29094"
-     inkscape:cy="1127.9359"
-     inkscape:window-width="1536"
-     inkscape:window-height="793"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:cx="561.25984"
+     inkscape:cy="531.47041"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" /><defs
-     id="defs2"><inkscape:path-effect
+     id="defs2"><rect
+       x="-379.15747"
+       y="145.53519"
+       width="1750.2522"
+       height="658.73824"
+       id="rect569" /><inkscape:path-effect
        effect="bspline"
        id="path-effect15903"
        is_visible="true"
@@ -433,11 +438,11 @@
        inkscape:export-ydpi="96"><tspan
          x="264.08887"
          y="262.49219"
-         id="tspan741">BERT
+         id="tspan2463">BERT
 </tspan><tspan
          x="240.41699"
          y="302.49219"
-         id="tspan743">Tokenizer</tspan></text><text
+         id="tspan2465">Tokenizer</tspan></text><text
        xml:space="preserve"
        transform="scale(0.26458333)"
        id="text425"
@@ -580,7 +585,7 @@
          y="90.730095"
          sodipodi:role="line">Emb<tspan
    style="font-size:65%;baseline-shift:sub"
-   id="tspan12851-9">CLS</tspan></tspan></text><text
+   id="tspan561">T1</tspan></tspan></text><text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:6.35px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;baseline-shift:baseline;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0;stroke-linejoin:round;stroke-dasharray:none"
        x="175.9254"
@@ -592,7 +597,7 @@
          y="105.06062"
          sodipodi:role="line">Emb<tspan
    style="font-size:65%;baseline-shift:sub"
-   id="tspan12851-7">CLS</tspan></tspan></text><text
+   id="tspan565">T2</tspan></tspan></text><text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:6.35px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;baseline-shift:baseline;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0;stroke-linejoin:round;stroke-dasharray:none"
        x="174.85062"
@@ -658,16 +663,16 @@
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:32px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;white-space:pre;shape-inside:url(#rect421-8);display:inline;fill:#000000;stroke:#000000;stroke-width:0.00000006;stroke-linejoin:round;stroke-dasharray:none"
        x="67.648438"
        y="0"
-       inkscape:export-filename="BERT.svg"
+       inkscape:export-filename="LSTM.png"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><tspan
          x="264.08887"
          y="262.49219"
-         id="tspan745">BERT
+         id="tspan2467">BERT
 </tspan><tspan
          x="240.41699"
          y="302.49219"
-         id="tspan747">Tokenizer</tspan></text><text
+         id="tspan2469">Tokenizer</tspan></text><text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:8.46667px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:1.5875e-08;stroke-linejoin:round;stroke-dasharray:none"
        x="130.18375"
@@ -789,7 +794,7 @@
          y="292.27921"
          sodipodi:role="line">Emb<tspan
    style="font-size:65%;baseline-shift:sub"
-   id="tspan12851-9-9">CLS</tspan></tspan></text><text
+   id="tspan12851-9-9">T1</tspan></tspan></text><text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:6.35px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;baseline-shift:baseline;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0;stroke-linejoin:round;stroke-dasharray:none"
        x="174.6308"
@@ -801,7 +806,7 @@
          y="306.60971"
          sodipodi:role="line">Emb<tspan
    style="font-size:65%;baseline-shift:sub"
-   id="tspan12851-7-3">CLS</tspan></tspan></text><text
+   id="tspan12851-7-3">T2</tspan></tspan></text><text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:6.35px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;baseline-shift:baseline;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0;stroke-linejoin:round;stroke-dasharray:none"
        x="173.556"
@@ -1077,4 +1082,8 @@
          id="tspan507"
          style="stroke-width:0"
          x="280.16165"
-         y="369.01083">Dropout = 0.2</tspan></text></g></svg>
+         y="369.01083">Dropout = 0.2</tspan></text><text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text567"
+       style="font-style:italic;font-weight:500;font-size:24px;font-family:'CMU Classical Serif';-inkscape-font-specification:'CMU Classical Serif, Medium Italic';text-align:center;white-space:pre;shape-inside:url(#rect569);display:inline;fill:#000000;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round" /></g></svg>
